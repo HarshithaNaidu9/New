@@ -2,22 +2,12 @@ from flask import Flask
 
 app = Flask(__name__)
 
-
 @app.route("/")
-def index():
-    return '''
-    <!doctype html>
-    <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Hello Rajesh</title>
-      </head>
-      <body>
-        <h1>Hello Rajesh - Running in GitHub Actions CI</h1>
-      </body>
-    </html>
-    '''
-
+def home():
+    return """
+    <h1>🚀 Hello Rajesh!</h1>
+    <h2>This App is Running from GitHub Actions Pipeline</h2>
+    """
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
