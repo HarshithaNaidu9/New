@@ -1,45 +1,31 @@
-name: CD Pipeline
+- name: Deploy to EC2
+  uses: appleboy/ssh-action@v0.1.6
+  with:
+    host: ${{ secrets.EC2_HOST }}
+    username: ec2-user
+    key: ${{ secrets.EC2_SSH_KEY }}
 
-on:
-  workflow_run:
-    workflows: ["CI Pipeline"]
-    types:
-      - completed
+    script: |
+      cd /home/ec2-user
 
-jobs:
-  deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    runs-on: ubuntu-latest
+      # Install required tools
+      sudo yum update -y
+      sudo yum install git -y
+      sudo yum install python3-pip -y
 
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      # Remove old deployment
+      rm -rf python-app
 
-      - name: Deploy to EC2
-        uses: appleboy/ssh-action@v0.1.6
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ec2-user
-          key: ${{ secrets.EC2_SSH_KEY }}
+      # Clone repository
+      git clone https://github.com/V-RAJESH-123/python-git.git python-app
 
-          script: |
-            cd /home/ec2-user
+      cd python-app
 
-            # Remove old deployment
-            rm -rf python-app
+      # Install dependencies
+      pip3 install -r requirements.txt
 
-            # Clone latest code
-            git clone https://github.com/V-RAJESH-123/python-git.git python-app
+      # Stop old app if running
+      pkill -f app.py || true
 
-            cd python-app
-
-            # Install dependencies
-            sudo yum update -y
-            sudo yum install python3-pip -y
-            pip3 install -r requirements.txt
-
-            # Stop old app if running
-            pkill -f app.py || true
-
-            # Start application
-            nohup python3 app.py > output.log 2>&1 &
+      # Start Flask app
+      nohup python3 app.py > output.log 2>&1 &
