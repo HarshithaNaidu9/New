@@ -45,6 +45,8 @@ jobs:
             pkill -f app.py || true
 
             # Start Flask app in background
-            nohup python3 app.py > output.log 2>&1 &
+            nohup python3 app.py > output.log 2>&1 < /dev/null &
+            disown
+            exit 0
 
             echo "Deployment Successful 🚀"
