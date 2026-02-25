@@ -20,33 +20,20 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
 
           script: |
-            echo "Connected to EC2"
-
             cd /home/ec2-user
 
-            # Update server
             sudo yum update -y
-
-            # Install required packages
             sudo yum install git python3-pip -y
 
-            # Remove old deployment
             rm -rf python-app
-
-            # Clone latest repository
-            git clone https://github.com/HarshithaNaidu9/Website.git python-app
+            git clone https://github.com/HarshithaNaidu9/New.git python-app
 
             cd python-app
-
-            # Install Python dependencies
             pip3 install --user -r requirements.txt
 
-            # Stop previous Flask app
             pkill -f app.py || true
 
-            # Start Flask app in background
             nohup python3 app.py > output.log 2>&1 < /dev/null &
-            disown
-            exit 0
 
+            sleep 2
             echo "Deployment Successful 🚀"
