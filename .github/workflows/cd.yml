@@ -1,31 +1,50 @@
-- name: Deploy to EC2
-  uses: appleboy/ssh-action@v0.1.6
-  with:
-    host: ${{ secrets.EC2_HOST }}
-    username: ec2-user
-    key: ${{ secrets.EC2_SSH_KEY }}
+name: CD Pipeline
 
-    script: |
-      cd /home/ec2-user
+on:
+  workflow_run:
+    workflows: ["CI Pipeline"]   # MUST match CI workflow name exactly
+    types:
+      - completed
 
-      # Install required tools
-      sudo yum update -y
-      sudo yum install git -y
-      sudo yum install python3-pip -y
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
 
-      # Remove old deployment
-      rm -rf python-app
+    steps:
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
 
-      # Clone repository
-      git clone https://github.com/V-RAJESH-123/python-git.git python-app
+          script: |
+            echo "Connected to EC2"
 
-      cd python-app
+            cd /home/ec2-user
 
-      # Install dependencies
-      pip3 install -r requirements.txt
+            # Update server
+            sudo yum update -y
 
-      # Stop old app if running
-      pkill -f app.py || true
+            # Install required packages
+            sudo yum install git python3-pip -y
 
-      # Start Flask app
-      nohup python3 app.py > output.log 2>&1 &
+            # Remove old deployment
+            rm -rf python-app
+
+            # Clone latest repository
+            git clone https://github.com/HarshithaNaidu9/Website.git python-app
+
+            cd python-app
+
+            # Install Python dependencies
+            pip3 install --user -r requirements.txt
+
+            # Stop previous Flask app
+            pkill -f app.py || true
+
+            # Start Flask app in background
+            nohup python3 app.py > output.log 2>&1 &
+
+            echo "Deployment Successful 🚀"
