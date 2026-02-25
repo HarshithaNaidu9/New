@@ -21,12 +21,25 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
+
           script: |
             cd /home/ec2-user
+
+            # Remove old deployment
             rm -rf python-app
-            https://github.com/V-RAJESH-123/python-git.git python-app
+
+            # Clone latest code
+            git clone https://github.com/V-RAJESH-123/python-git.git python-app
+
             cd python-app
-            sudo yum update
+
+            # Install dependencies
+            sudo yum update -y
             sudo yum install python3-pip -y
             pip3 install -r requirements.txt
+
+            # Stop old app if running
+            pkill -f app.py || true
+
+            # Start application
             nohup python3 app.py > output.log 2>&1 &
